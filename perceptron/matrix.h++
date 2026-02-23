@@ -35,6 +35,17 @@ namespace matrix {
             data.resize(rows * cols);
         }
 
+       /**
+        * @brief Fill a matrix with a vector (pre-dimensioned)
+        * 
+        * @param vec :: Vector to copy from
+        *
+        * @return void :: None
+        */
+        void fill_vector(std::vector<T> &vec) {
+            this->data = vec;
+            return;
+        } 
 
 
         /**
