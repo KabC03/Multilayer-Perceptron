@@ -51,9 +51,9 @@ namespace matrix {
        /**
         * @brief Getter for a matrix's data
         *
-        * @return std::vector<float> & :: Const reference to internal vector
+        * @return const std::vector<float> & :: Const reference to internal vector
         */
-        std::vector<float> &get_vector(void) {
+        const std::vector<float> &get_vector(void) {
             return this->data;;
         } 
 
