@@ -1,6 +1,8 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 #include <iostream>
+#include <string>
+#include <fstream>
 #include <vector>
 
 
@@ -163,6 +165,25 @@ namespace matrix {
 
 
         /**
+         * @brief Get the number of rows in a matrix
+         * 
+         * @return Number of rows in the matrix
+         */
+        size_t get_rows(void) {
+            return this->rows;
+        }
+
+
+        /**
+         * @brief Get the number of cols in a matrix
+         * 
+         * @return Number of cols in the matrix
+         */
+        size_t get_cols(void) {
+            return this->cols;
+        }
+
+        /**
          * @brief Multiply a matrix by a scalar 
          * 
          * @param scalar :: Scalar to multiply by 
@@ -191,6 +212,66 @@ namespace matrix {
                 }
             }
             return *this;
+        }
+
+
+        /**
+         * @brief Append a matrix to a file, including dimensions
+         * 
+         * @param fileName :: File name
+         * 
+         * @return bool :: Indication of if matrix was successfully written (true = yes)
+         */
+        bool append_to_file(std::string fileName) {
+            std::ofstream file(fileName, std::ios::app);
+            if(!file) {
+                return false;
+            }
+            file << this->rows << "\n" << this->cols << "\n";
+            for(size_t i = 0; i < this->rows; i++) {
+                for(size_t j = 0; j < this->cols; j++) {
+                    file << this->at(i, j) << " ";
+                }
+            }
+            file << "\n";
+            return file.good(); //Make sure file is ok
+        }
+
+
+        /**
+         * @brief Read a matrix from a file stream. Expects rows,\n,cols,\n,data
+         * 
+         * @param fstream :: File name
+         * 
+         * @return bool :: Indication of if matrix was successfully read (true = yes)
+         */
+        bool read_float_file_fstream(std::ifstream &file) {
+            if(!file) {
+                return false;
+            }
+            
+
+            //Get dimensions
+            std::string line;
+            std::getline(file, line);
+            size_t rows = std::stoull(line);
+            std::getline(file, line);
+            size_t cols = std::stoull(line);
+            this->rows = rows;
+            this->cols = cols;
+            this->data.resize(rows * cols);
+
+            //Get data
+            for(size_t i = 0; i < rows; i++) {
+                for(size_t j = 0; j < cols; j++) {
+                    std::getline(file, line, ' ');
+                    this->data[i * cols + j] = std::stof(line);
+                }
+            }
+            //Skip \n
+            std::getline(file, line);
+
+            return true;
         }
 
 

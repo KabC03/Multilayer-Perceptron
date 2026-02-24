@@ -1,5 +1,7 @@
 #include <random>
 #include <stdexcept>
+#include <string>
+#include <fstream>
 #include "./matrix.h++"
 
 
@@ -88,7 +90,7 @@ namespace perceptron {
                     layer.dA = matrix::Matrix<float>(neuronsPrev, 1);
                 }
 
-                layer.dZ = matrix::Matrix<float>(neuronsCurrent, 1);
+                layer.dZ = matrix::Matrix<float>(neuronsNext, 1);
 
 
                 //Randomise layer
@@ -115,6 +117,100 @@ namespace perceptron {
                 }
             }
         }
+
+
+        /**
+         * @brief Save a network into a file (weights + biases only)
+         * 
+         * @param fileName :: File name to save the network state too
+         * 
+         * @return bool :: Indication of if save was successful
+         */
+        bool save_file(std::string fileName) {
+            //TODO: Should work on making this not reopen a file many, many times
+
+            std::ofstream file(fileName); //Clear file
+            if(!file) {
+                return false;
+            }
+            file.close();
+            for(Layer layer : this->layers) {
+
+                std::ofstream file(fileName, std::ios::app); //Write activation function
+                if(!file) {
+                    return false;
+                }
+                file << layer.act << "\n";
+                file.close();
+
+
+                if(!layer.w.append_to_file(fileName)) {
+                    return false;
+                }
+
+                if(!layer.b.append_to_file(fileName)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * @brief Read a network from a file
+         * 
+         * @param fileName :: File name to load the network state from
+         * 
+         * @return bool :: Indication of if save was successful
+         */
+        bool read_file(std::string fileName) {
+            //need to improve error handling
+            std::ifstream file(fileName);
+            if(!file) {
+                return false;
+            }
+            layers.clear();
+            while(1) {
+                std::string str;
+                if(!std::getline(file, str)) {
+                    break;
+                }
+
+                ACTIVATION_FUNCTION act = (ACTIVATION_FUNCTION)std::stoi(str);
+
+                //Need to reduce redundant copies here
+                matrix::Matrix<float> weight;
+                if(!weight.read_float_file_fstream(file)) {
+                    return false;
+                }
+
+                matrix::Matrix<float> bias;
+                if(!bias.read_float_file_fstream(file)) {
+                    return false;
+                }
+
+                Layer layer = {
+                    .act = act,
+                    .w = weight,
+                    .b = bias,
+                };
+                size_t neuronsNext = layer.w.get_rows();
+                size_t neuronsCurrent = layer.w.get_cols();
+                layer.a = matrix::Matrix<float>(neuronsNext, 1);
+                layer.dw = matrix::Matrix<float>(neuronsNext, neuronsCurrent);
+                layer.db = matrix::Matrix<float>(neuronsNext, 1);
+                layer.dA = matrix::Matrix<float>(neuronsCurrent, 1);
+                layer.dZ = matrix::Matrix<float>(neuronsNext, 1);
+
+                layers.push_back(layer);
+            }
+            if(layers.empty()) {
+                return false;
+            }
+            this->input = matrix::Matrix<float>(layers.front().w.get_cols(), 1);
+            return true;
+        }
+
         
         /**
          * @brief Forward pass on a neural network (single batch)
@@ -133,7 +229,7 @@ namespace perceptron {
             matrix::Matrix<float> *inputMatrix = &(this->input);
             
             for(Layer &layer : this->layers) {
-                layer.a.multiply(*inputMatrix, layer.w, false, true);
+                layer.a.multiply(layer.w, *inputMatrix, false, false);
                 layer.a.add(layer.b);
                 
                 switch(layer.act) {
@@ -144,7 +240,7 @@ namespace perceptron {
                 }
                 inputMatrix = &(layer.a);
             }            
-            return this->layers.back.a.get_vector();
+            return this->layers.back().a.get_vector();
         }
         
         /**
@@ -158,6 +254,10 @@ namespace perceptron {
         void backward(std::vector<float> &y, float lr) {
             
         }
+
+
+
+
     };
 }
 
