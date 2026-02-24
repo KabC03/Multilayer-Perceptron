@@ -18,7 +18,7 @@ Internal structures are pre-allocated ahead of time.
 
 **./perceptron** :: Source files for network
 
-**./testing** :: Various labeled tests and benchmarks
+**./testing** :: Tests for a 2D function 
 
 **./output** :: Output of saved network states for tests
 
