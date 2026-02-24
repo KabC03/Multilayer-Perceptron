@@ -22,6 +22,16 @@ namespace matrix {
         std::vector<T> data;
         public:
 
+        /**
+         * @brief Boring constructor for matrix class
+         * 
+         * @param rows :: Rows of the matrix
+         * @param cols :: Cols of the matrix
+         */
+        Matrix(void) {
+            this->rows = 0;
+            this->cols = 0;
+        }
 
         /**
          * @brief Initialise a matrix and reserve memory for its buffers
