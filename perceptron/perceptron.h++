@@ -1,4 +1,5 @@
 #include <random>
+#include <stdexcept>
 #include "./matrix.h++"
 
 
@@ -27,11 +28,17 @@ namespace perceptron {
         //Network only supports relu, sigmoid and tanh
         //Means Z doesnt need to be stored, only A
         
+        //Preallocated for backpropagation
+        matrix::Matrix<float> dA;
+        matrix::Matrix<float> dZ; 
     };
     class Perceptron {
         private:
         matrix::Matrix<float> input; //Input to layer
         std::vector<Layer> layers;
+
+        
+
     
         public:
         /**
@@ -40,7 +47,13 @@ namespace perceptron {
          * @param neuronsPerLayer :: Vector of neurons in each layer. Index 0 is considered as layer one, and the end is the output layer
          * @param activationFunctionsPerLayer :: Vector of ACTIVATION_FUNCTION's (corrosponding to neurons perlayer)
          */
-         Perceptron(std::vector<size_t> &neuronsPerLayer, std::vector<ACTIVATION_FUNCTION> &activationFunctionsPerLayer) {
+        Perceptron(std::vector<size_t> &neuronsPerLayer, std::vector<ACTIVATION_FUNCTION> &activationFunctionsPerLayer) {
+             
+            this->input = matrix::Matrix<float>(neuronsPerLayer.front(), 1);
+            
+            if(neuronsPerLayer.size() != activationFunctionsPerLayer.size()) {
+                throw std::invalid_argument("Incompatable neuron and activation function vector dimensions\n");
+            }
              
             std::mt19937 rng(std::random_device{}());
             this->layers.reserve(neuronsPerLayer.size() - 1);
@@ -48,6 +61,12 @@ namespace perceptron {
             for(size_t i = 0; i < neuronsPerLayer.size() - 1; i++) {
                 size_t neuronsCurrent = neuronsPerLayer[i];
                 size_t neuronsNext = neuronsPerLayer[i+1];
+                
+                size_t neuronsPrev = 0;
+                if(i > 0) {
+                    neuronsPrev = neuronsPerLayer[i-1];
+                }
+
                 ACTIVATION_FUNCTION act = activationFunctionsPerLayer[i];
                 
                 
@@ -64,6 +83,12 @@ namespace perceptron {
                 layer.dw = matrix::Matrix<float>(neuronsNext, neuronsCurrent);
                 layer.db = matrix::Matrix<float>(neuronsNext, 1);
                 layer.act = act;
+                
+                if(i > 0) {
+                    layer.dA = matrix::Matrix<float>(neuronsPrev, 1);
+                }
+
+                layer.dZ = matrix::Matrix<float>(neuronsCurrent, 1);
 
 
                 //Randomise layer
@@ -99,6 +124,11 @@ namespace perceptron {
          * @return std::vector<float>& :: Pointer to internal network output
          */
         const std::vector<float> &forward(std::vector<float> &x) {
+            
+            if(x.size() != this->input.get_vector().size()) {
+                throw std::invalid_argument("Network was passed incompatable x dimension\n");
+            }
+            
             this->input.fill_vector(x);
             matrix::Matrix<float> *inputMatrix = &(this->input);
             
@@ -117,9 +147,17 @@ namespace perceptron {
             return this->layers.back.a.get_vector();
         }
         
-        
-        
-        
+        /**
+         * @brief Backpropagation implementation. Batch size == 1
+         * 
+         * @param y :: Expected network output
+         * @param lr :: Learning rate during back propagation
+         * 
+         * @return void :: None 
+         */
+        void backward(std::vector<float> &y, float lr) {
+            
+        }
     };
 }
 
