@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cmath>
 #include <vector>
 
 
@@ -47,6 +48,18 @@ namespace matrix {
             data.resize(rows * cols);
         }
 
+        /**
+         * @brief Construct a matrix with a pointer to data
+         * 
+         * @param rows :: Rows of matrix
+         * @param cols :: Cols of matrix
+         */
+        Matrix(size_t rows, size_t cols, std::vector<T> &data) {
+            this->rows = rows;
+            this->cols = cols;
+            this->data = data;
+        }
+
        /**
         * @brief Fill a matrix with a vector (pre-dimensioned)
         * 
@@ -65,7 +78,7 @@ namespace matrix {
         *
         * @return const std::vector<float> & :: Const reference to internal vector
         */
-        const std::vector<float> &get_vector(void) {
+        const std::vector<T> &get_vector(void) {
             return this->data;;
         } 
 
@@ -85,7 +98,7 @@ namespace matrix {
             return this->data[row * this->cols + col];
         }
 
-
+        
 
         /**
          * @brief In place matrix multiplication (z = xw)
@@ -304,7 +317,7 @@ namespace matrix {
             return *this;
         }
         /**
-         * @brief ReLU derivateive activation on a matrix
+         * @brief ReLU derivative activation on a matrix
          * 
          * @return Matrix<T>& :: This (result matrix)
          */
@@ -315,6 +328,56 @@ namespace matrix {
             return *this;
         }
 
+        /**
+         * @brief Sigmoid activation on a matrix
+         * 
+         * @return Matrix<T>& :: This (result matrix)
+         */
+        Matrix<T> &activate_sigmoid(void) {
+            for(size_t i = 0; i < this->rows * this->cols; i++) {
+                this->data[i] = 1/(1 + exp(-1 * this->data[i]));
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Sigmoid derivative activation on a matrix
+         * 
+         * @return Matrix<T>& :: This (result matrix)
+         */
+        Matrix<T> &activate_derivative_sigmoid(void) {
+            for(size_t i = 0; i < this->rows * this->cols; i++) {
+
+                this->data[i] = this->data[i] * (1 - this->data[i]);
+            }
+            return *this;
+        }
+
+
+        /**
+         * @brief Tanh activation on a matrix
+         * 
+         * @return Matrix<T>& :: This (result matrix)
+         */
+        Matrix<T> &activate_tanh(void) {
+            for(size_t i = 0; i < this->rows * this->cols; i++) {
+                this->data[i] = tanh(this->data[i]);
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Tanh derivative activation on a matrix
+         * 
+         * @return Matrix<T>& :: This (result matrix)
+         */
+        Matrix<T> &activate_derivative_tanh(void) {
+            for(size_t i = 0; i < this->rows * this->cols; i++) {
+
+                this->data[i] = 1 - (this->data[i] * this->data[i]);
+            }
+            return *this;
+        }
     };
 }
 

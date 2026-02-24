@@ -9,7 +9,8 @@ namespace perceptron {
     
     typedef enum ACTIVATION_FUNCTION {
         RELU,
-        
+        SIGMOID,
+        TANH, 
     } ACTIVATION_FUNCTION;
     
     class Layer {
@@ -53,7 +54,7 @@ namespace perceptron {
              
             this->input = matrix::Matrix<float>(neuronsPerLayer.front(), 1);
             
-            if(neuronsPerLayer.size() != activationFunctionsPerLayer.size()) {
+            if(neuronsPerLayer.size() -1 != activationFunctionsPerLayer.size()) {
                 throw std::invalid_argument("Incompatable neuron and activation function vector dimensions\n");
             }
              
@@ -63,11 +64,6 @@ namespace perceptron {
             for(size_t i = 0; i < neuronsPerLayer.size() - 1; i++) {
                 size_t neuronsCurrent = neuronsPerLayer[i];
                 size_t neuronsNext = neuronsPerLayer[i+1];
-                
-                size_t neuronsPrev = 0;
-                if(i > 0) {
-                    neuronsPrev = neuronsPerLayer[i-1];
-                }
 
                 ACTIVATION_FUNCTION act = activationFunctionsPerLayer[i];
                 
@@ -86,10 +82,7 @@ namespace perceptron {
                 layer.db = matrix::Matrix<float>(neuronsNext, 1);
                 layer.act = act;
                 
-                if(i > 0) {
-                    layer.dA = matrix::Matrix<float>(neuronsPrev, 1);
-                }
-
+                layer.dA = matrix::Matrix<float>(neuronsCurrent, 1);
                 layer.dZ = matrix::Matrix<float>(neuronsNext, 1);
 
 
@@ -106,6 +99,21 @@ namespace perceptron {
                                 layer.w.at(i, j) = dist(rng);
                             }
                         }                        
+                        break;
+                    } case SIGMOID: {
+                        [[fallthrough]];
+                    } case TANH: {
+                        float nIn = (float)(neuronsCurrent);
+                        float nOut = (float)(neuronsNext);
+
+                        float d = sqrt((float)(6)/(nIn + nOut));
+                        std::uniform_real_distribution<float> dist(-d, d);
+                        for(size_t i = 0; i < neuronsNext; i++) {
+                            for(size_t j = 0; j < neuronsCurrent; j++) {
+                                layer.w.at(i, j) = dist(rng);
+                            }
+                        }
+
                         break;
                     }
                 }
@@ -236,6 +244,12 @@ namespace perceptron {
                     case RELU: {
                         layer.a.activate_relu();   
                         break;
+                    } case SIGMOID: {
+                        layer.a.activate_sigmoid();
+                        break;
+                    } case TANH: {
+                        layer.a.activate_tanh();
+                        break;
                     }
                 }
                 inputMatrix = &(layer.a);
@@ -253,6 +267,82 @@ namespace perceptron {
          */
         void backward(std::vector<float> &y, float lr) {
             
+            Layer &out = this->layers.back();
+            if(y.size() != out.a.get_vector().size()) {
+                throw std::invalid_argument("Network was passed incompatable y dimension\n");
+            }
+
+            //Compute gradients dZ, dW, dB
+            for(size_t i = this->layers.size() - 1; i != SIZE_MAX; i--) {
+                Layer &layer = this->layers[i];
+
+                matrix::Matrix<float> *aPrev = NULL;
+                if(i == 0) {
+                    aPrev = &(this->input);
+                } else {
+                    aPrev = &(this->layers[i - 1].a);
+                }
+
+                //Find dZ
+                if(i == this->layers.size() - 1) { //Back layer
+
+                    //dA = (A - y), dZ = Hadamard(dA, G'(A))
+                    for(size_t j = 0; j < layer.dZ.get_rows(); j++) {
+                        layer.dZ.at(j, 0) = layer.a.at(j, 0) - y[j];
+                    }
+
+                } else { //Hidden layer
+                    //dZ = wNext^T * dZNext
+
+                    Layer &next = this->layers[i + 1];
+                    layer.dZ.multiply(next.w, next.dZ, true, false);
+                }
+
+                //Use dB as temp buffer, gets overwritten anyway and has same size
+                //dB = G'(A)
+                //dZ = hadamard(dZ, dB)
+                for(size_t j = 0; j < layer.db.get_rows(); j++) {
+                    layer.db.at(j, 0) = layer.a.at(j, 0);
+                }
+
+                switch(layer.act) {
+                    case RELU: {
+                        layer.db.activate_derivative_relu();
+                        break;
+                    } case SIGMOID: {
+                        layer.db.activate_derivative_sigmoid();
+                        break;
+                    } case TANH: {
+                        layer.db.activate_derivative_tanh();
+                        break;
+                    }
+                }
+                layer.dZ.hadamard(layer.db);
+
+
+                //dW = dZ * aPrev^T
+                layer.dw.multiply(layer.dZ, *aPrev, false, true);
+
+                //dB = dZ
+                for(size_t j = 0; j < layer.db.get_rows(); j++) {
+                    layer.db.at(j, 0) = layer.dZ.at(j, 0);
+                }
+            }
+            //Second pass to update params
+            for(Layer &layer : this->layers) {
+
+                //W -= lr * dW
+                for(size_t i = 0; i < layer.w.get_rows(); i++) {
+                    for(size_t j = 0; j < layer.w.get_cols(); j++) {
+                        layer.w.at(i, j) -= lr * layer.dw.at(i, j);
+                    }
+                }
+
+                for(size_t i = 0; i < layer.b.get_rows(); i++) {
+                    layer.b.at(i, 0) -= lr * layer.db.at(i, 0);
+                }
+            }
+            return;
         }
 
 

@@ -1,5 +1,7 @@
 #Vscode
 .vscode/
+/bin/*
+/output/*
 
 #MacOS
 .DS_Store
