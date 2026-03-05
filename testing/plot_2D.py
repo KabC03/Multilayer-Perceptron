@@ -1,3 +1,7 @@
+#Expects file output
+#[x vals] (input)
+#[y vals] (actual)
+#[p vals] (predicted)
 import matplotlib.pyplot as plt
 
 
