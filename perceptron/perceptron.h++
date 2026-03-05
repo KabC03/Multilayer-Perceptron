@@ -256,7 +256,30 @@ namespace perceptron {
             }            
             return this->layers.back().a.get_vector();
         }
-        
+       
+        /**
+         * @brief Retrieve the MSE for the last forward pass
+         * 
+         * @param &y :: Expected output of network
+         * 
+         * @return float :: MSE
+         */
+        float mse(std::vector<float> &y) {
+
+            if(y.size() != this->layers.back().a.get_rows()) {
+                throw std::invalid_argument("Network was passed incompatable y dimension\n");
+            }
+
+            float mse = 0;
+            for(size_t i = 0; i < y.size(); i++) {
+                mse += pow(y[i] - this->layers.back().a.at(i, 0), 2);
+            }
+
+            mse *= 0.5;
+            return mse;
+        }
+
+
         /**
          * @brief Backpropagation implementation. Batch size == 1
          * 
