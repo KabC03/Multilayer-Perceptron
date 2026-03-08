@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 x, y, p = [], [], [];
 
 
-with open("./output/out.txt", "r") as file:
+with open("./output/benchmark_sin.txt", "r") as file:
     x = list(map(float,file.readline().split()));
     y = list(map(float,file.readline().split()));
     p = list(map(float,file.readline().split()));

@@ -275,7 +275,7 @@ namespace perceptron {
                 mse += pow(y[i] - this->layers.back().a.at(i, 0), 2);
             }
 
-            mse *= 0.5;
+            mse /= (float)(y.size());
             return mse;
         }
 
