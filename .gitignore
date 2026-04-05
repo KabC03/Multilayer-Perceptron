@@ -1,8 +1,8 @@
 #Vscode
 .vscode/
-/bin/*
-/output/*
-/data/*
+/bin/
+/output/
+/data/
 
 #MacOS
 .DS_Store
