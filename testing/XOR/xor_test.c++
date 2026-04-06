@@ -9,7 +9,7 @@ int main() {
 
     //2 inputs, 4 hidden, 1 output
     std::vector<size_t> layers = {2, 4, 1};
-    std::vector<perceptron::ACTIVATION_FUNCTION> acts = {perceptron::RELU, perceptron::SIGMOID};
+    std::vector<perceptron::ACTIVATION_FUNCTION> acts = {perceptron::TANH, perceptron::SIGMOID};
     
     perceptron::Perceptron net(layers, acts);
     
