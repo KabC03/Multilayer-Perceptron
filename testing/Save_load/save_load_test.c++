@@ -49,7 +49,7 @@ int main() {
     
     //Load into netB - should overwrite architecture
     std::cout << "Loading from file...\n";
-    if(netB.read_file("test_model.net")) {
+    if(netB.read_file("./Save_load/test_model.net")) {
         std::cout << "Load successful\n\n";
     } else {
         std::cout << "Load FAILED\n";
